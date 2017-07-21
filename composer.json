@@ -25,12 +25,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Tokenly\\PackageFolderName\\": "src"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tokenly\\PackageFolderName\\": "tests"
+            "Tokenly\\Vault\\": "src"
         }
     },
     "scripts": {
