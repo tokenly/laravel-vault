@@ -5,6 +5,7 @@ namespace Tokenly\Vault;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Jippi\Vault\ServiceFactory;
+use Jippi\Vault\Client as VaultClient;
 use Tokenly\Vault\VaultWrapper;
 
 /**
@@ -16,10 +17,6 @@ class Vault
     protected $vault_service_factory = null;
     protected $options = null;
 
-    /**
-     * Vault constructor.
-     *
-     */
     /**
      * Vault constructor
      * @param string $address      Vault service address like https://127.0.0.1:8200
@@ -56,7 +53,7 @@ class Vault
      *   "raw" => "{"initialized":true}\n",
      *   "error" => null,
      * ]
-     * @return [type] [description]
+     * @return array          the response data
      */
     public function sys() {
         return new VaultWrapper($this->getFactory('sys'));
@@ -73,7 +70,7 @@ class Vault
      *   "raw" => "{"initialized":true}\n",
      *   "error" => null,
      * ]
-     * @return [type] [description]
+     * @return array          the response data
      */
     public function data() {
         return new VaultWrapper($this->getFactory('data'));
@@ -90,10 +87,23 @@ class Vault
      *   "raw" => "{"initialized":true}\n",
      *   "error" => null,
      * ]
-     * @return [type] [description]
+     * @return array          the response data
      */
     public function authToken() {
         return new VaultWrapper($this->getFactory('auth/token'));
+    }
+
+    /**
+     * Raw vault call with a path
+     * @param  string $method get, put, post, delete
+     * @param  string $url    URL path like /v1/sys/init
+     * @param  array  $params params like ['body' => json_encode(['foo' => bar])]
+     * @return array          the response data
+     */
+    public function raw($method, $url, $params=[]) {
+        $client = new VaultClient($this->options);
+        $wrapper = new VaultWrapper(null);
+        return $wrapper->raw($client, $method, $url, $params);
     }
 
     // ------------------------------------------------------------------------

@@ -5,6 +5,7 @@ namespace Tokenly\Vault;
 use Exception;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Log;
+use Jippi\Vault\Client as VaultClient;
 use Jippi\Vault\Exception\ClientException;
 use Jippi\Vault\Exception\ServerException;
 use RuntimeException;
@@ -19,13 +20,22 @@ class VaultWrapper
         $this->service_delegate = $service_delegate;
     }
 
-    public function setToken() {
-        $options['defaults']['headers']['X-Vault-Token'] = $this->getVaultToken();
-    }
-
     public function __call($method, $args) {
         try {
+            if (!$this->service_delegate) { throw new Exception("Undefined service", 1); }
             $response = call_user_func_array([$this->service_delegate, $method], $args);
+            $exception = null;
+        } catch (Exception $e) {
+            $exception = $e;
+            $response = null;
+        }
+
+        return $this->decodeResponse($response, $exception);
+    }
+
+    public function raw(VaultClient $client, $method, $url, $params) {
+        try {
+            $response = $client->{$method}($url, $params);
             $exception = null;
         } catch (Exception $e) {
             $exception = $e;
