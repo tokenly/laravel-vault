@@ -29,7 +29,7 @@ Tokenly\Vault\VaultServiceProvider::class,
 ```
 VAULT_ADDR=https://127.0.0.1:8200
 VAULT_CA_CERT_PATH=/path/to/ca.cert
-
+```
 
 ### Use it
 
