@@ -87,7 +87,7 @@ class VaultWrapper
                     $success = true;
                 }
             }
-        } else {
+        } else if ($success === null) {
             $body = $response;
             $success = true;
         }
