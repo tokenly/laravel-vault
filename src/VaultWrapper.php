@@ -8,21 +8,22 @@ use Illuminate\Support\Facades\Log;
 use Jippi\Vault\Client as VaultClient;
 use Jippi\Vault\Exception\ClientException;
 use Jippi\Vault\Exception\ServerException;
-use RuntimeException;
 
 /**
  * Class VaultWrapper
  */
-class VaultWrapper 
+class VaultWrapper
 {
 
-    public function __construct($service_delegate) {
+    public function __construct($service_delegate)
+    {
         $this->service_delegate = $service_delegate;
     }
 
-    public function __call($method, $args) {
+    public function __call($method, $args)
+    {
         try {
-            if (!$this->service_delegate) { throw new Exception("Undefined service", 1); }
+            if (!$this->service_delegate) {throw new Exception("Undefined service", 1);}
             $response = call_user_func_array([$this->service_delegate, $method], $args);
             $exception = null;
         } catch (Exception $e) {
@@ -33,7 +34,8 @@ class VaultWrapper
         return $this->decodeResponse($response, $exception);
     }
 
-    public function raw(VaultClient $client, $method, $url, $params) {
+    public function raw(VaultClient $client, $method, $url, $params)
+    {
         try {
             $response = $client->{$method}($url, $params);
             $exception = null;
@@ -45,17 +47,18 @@ class VaultWrapper
         return $this->decodeResponse($response, $exception);
     }
 
-    protected function decodeResponse($response, $exception) {
-        $json_data          = null;
+    protected function decodeResponse($response, $exception)
+    {
+        $json_data = null;
         $http_response_code = null;
-        $success            = null;
-        $error              = null;
+        $success = null;
+        $error = null;
         $body = null;
 
         if ($exception) {
             $success = false;
             $error = $exception->getMessage();
-            if (($exception instanceof ClientException) OR ($exception instanceof ServerException)) {
+            if (($exception instanceof ClientException) or ($exception instanceof ServerException)) {
                 $response = $exception->response();
             }
         }
@@ -73,13 +76,13 @@ class VaultWrapper
 
                     if ($success === false) {
                         // try replacing the error message
-                        if ($json_data AND isset($json_data['errors']) AND is_array($json_data['errors'])) {
+                        if ($json_data and isset($json_data['errors']) and is_array($json_data['errors'])) {
                             $error = implode(", ", $json_data['errors']);
                         }
                     }
                 } else {
                     $success = false;
-                    $error = 'Error trying to decode response: ' .json_last_error_msg();
+                    $error = 'Error trying to decode response: ' . json_last_error_msg();
 
                 }
             } else {
@@ -94,15 +97,15 @@ class VaultWrapper
         }
 
         if (!$success) {
-            Log::warning("Vault Error ($http_response_code): ".$error);
+            Log::warning("Vault Error ($http_response_code): " . $error);
         }
 
         return [
             'success' => $success,
-            'code'    => $http_response_code,
-            'data'    => $json_data,
-            'error'   => $error,
-            'raw'     => $body,
+            'code' => $http_response_code,
+            'data' => $json_data,
+            'error' => $error,
+            'raw' => $body,
         ];
     }
 

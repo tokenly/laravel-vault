@@ -2,10 +2,8 @@
 
 namespace Tokenly\Vault;
 
-use Exception;
-use Illuminate\Support\Facades\Log;
-use Jippi\Vault\ServiceFactory;
 use Jippi\Vault\Client as VaultClient;
+use Jippi\Vault\ServiceFactory;
 use Tokenly\Vault\VaultWrapper;
 
 /**
@@ -22,7 +20,7 @@ class Vault
      * @param string $address      Vault service address like https://127.0.0.1:8200
      * @param string $ca_cert_path Path to a certificate authority certificate
      */
-    public function __construct($address, $ca_cert_path=null)
+    public function __construct($address, $ca_cert_path = null)
     {
         $this->options = [
             'base_uri' => $address,
@@ -33,7 +31,8 @@ class Vault
         }
     }
 
-    public function setToken($token) {
+    public function setToken($token)
+    {
         $this->options = array_merge_recursive(
             $this->options,
             ['headers' => ['X-Vault-Token' => $token]]
@@ -55,7 +54,8 @@ class Vault
      * ]
      * @return array          the response data
      */
-    public function sys() {
+    public function sys()
+    {
         return new VaultWrapper($this->getFactory('sys'));
     }
 
@@ -72,7 +72,8 @@ class Vault
      * ]
      * @return array          the response data
      */
-    public function data() {
+    public function data()
+    {
         return new VaultWrapper($this->getFactory('data'));
     }
 
@@ -89,7 +90,8 @@ class Vault
      * ]
      * @return array          the response data
      */
-    public function authToken() {
+    public function authToken()
+    {
         return new VaultWrapper($this->getFactory('auth/token'));
     }
 
@@ -100,15 +102,17 @@ class Vault
      * @param  array  $params params like ['body' => json_encode(['foo' => bar])]
      * @return array          the response data
      */
-    public function raw($method, $url, $params=[]) {
+    public function raw($method, $url, $params = [])
+    {
         $client = new VaultClient($this->options);
         $wrapper = new VaultWrapper(null);
         return $wrapper->raw($client, $method, $url, $params);
     }
 
     // ------------------------------------------------------------------------
-    
-    protected function getFactory($path) {
+
+    protected function getFactory($path)
+    {
         $sf = new ServiceFactory($this->options);
         return $sf->get($path);
     }
