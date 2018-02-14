@@ -50,6 +50,7 @@ class VaultWrapper
         $http_response_code = null;
         $success            = null;
         $error              = null;
+        $body = null;
 
         if ($exception) {
             $success = false;
