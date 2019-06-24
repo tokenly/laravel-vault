@@ -12,7 +12,7 @@ use Jippi\Vault\Exception\ServerException;
 /**
  * Class VaultWrapper
  */
-class VaultWrapper
+class Wrapper
 {
 
     public function __construct($service_delegate)

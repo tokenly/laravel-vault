@@ -61,11 +61,11 @@ class Vault
      *   "error" => null,
      * ]
      *
-     * @return \Tokenly\Vault\VaultWrapper the response data
+     * @return \Tokenly\Vault\Wrapper the response data
      */
     public function sys()
     {
-        return new VaultWrapper($this->getFactory()->get('sys'));
+        return new Wrapper($this->getFactory()->get('sys'));
     }
 
     /**
@@ -80,11 +80,11 @@ class Vault
      *   "error" => null,
      * ]
      *
-     * @return \Tokenly\Vault\VaultWrapper the response data
+     * @return \Tokenly\Vault\Wrapper the response data
      */
     public function data()
     {
-        return new VaultWrapper($this->getFactory()->get('data'));
+        return new Wrapper($this->getFactory()->get('data'));
     }
 
     /**
@@ -99,11 +99,11 @@ class Vault
      *   "error" => null,
      * ]
      *
-     * @return \Tokenly\Vault\VaultWrapper the response data
+     * @return \Tokenly\Vault\Wrapper the response data
      */
     public function authToken()
     {
-        return new VaultWrapper($this->getFactory()->get('auth/token'));
+        return new Wrapper($this->getFactory()->get('auth/token'));
     }
 
     /**
@@ -117,7 +117,7 @@ class Vault
      */
     public function raw($method, $url, $params = [])
     {
-        return (new VaultWrapper(null))
+        return (new Wrapper(null))
             ->raw($this->getClient(), $method, $url, $params);
     }
 

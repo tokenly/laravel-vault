@@ -17,8 +17,8 @@ use Illuminate\Support\Facades\Facade;
  * Class Vault.
  *
  * @method static \Tokenly\Vault\Vault setToken(string $token)
- * @method static \Tokenly\Vault\VaultWrapper sys()
- * @method static \Tokenly\Vault\VaultWrapper data()
+ * @method static \Tokenly\Vault\Wrapper sys()
+ * @method static \Tokenly\Vault\Wrapper data()
  * @method static array raw(string $method, string $url, array $params = [])
  */
 class Vault extends Facade
