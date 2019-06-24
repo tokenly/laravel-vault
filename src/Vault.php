@@ -2,11 +2,13 @@
 
 namespace Tokenly\Vault;
 
-use Jippi\Vault\Client;
-use Jippi\Vault\ServiceFactory;
-
 /**
  * Class Vault.
+ *
+ * @method \Jippi\Vault\Services\Sys sys()
+ * @method \Jippi\Vault\Services\Data data()
+ * @method \Jippi\Vault\Services\Auth\Token authToken()
+ * @method \Tokenly\Vault\Services\Raw raw()
  */
 class Vault
 {
@@ -50,75 +52,24 @@ class Vault
     }
 
     /**
-     * Calls Vault and returns a result like
-     * [
-     *   "success" => true,
-     *   "code" => 200,
-     *   "data" => [
-     *     "initialized" => true,
-     *   ],
-     *   "raw" => "{"initialized":true}\n",
-     *   "error" => null,
-     * ]
+     * @param $method
+     * @param $args
      *
-     * @return \Tokenly\Vault\Wrapper the response data
+     * @return Wrapper
      */
-    public function sys()
+    public function __call($method, $args)
     {
-        return new Wrapper($this->getFactory()->get('sys'));
+        return new Wrapper($this->getFactory()->get($this->camelMethodName($method)));
     }
 
     /**
-     * Calls Vault and returns a result like
-     * [
-     *   "success" => true,
-     *   "code" => 200,
-     *   "data" => [
-     *     "initialized" => true,
-     *   ],
-     *   "raw" => "{"initialized":true}\n",
-     *   "error" => null,
-     * ]
+     * @param $method
      *
-     * @return \Tokenly\Vault\Wrapper the response data
+     * @return string
      */
-    public function data()
+    protected function camelMethodName($method)
     {
-        return new Wrapper($this->getFactory()->get('data'));
-    }
-
-    /**
-     * Calls Vault and returns a result like
-     * [
-     *   "success" => true,
-     *   "code" => 200,
-     *   "data" => [
-     *     "initialized" => true,
-     *   ],
-     *   "raw" => "{"initialized":true}\n",
-     *   "error" => null,
-     * ]
-     *
-     * @return \Tokenly\Vault\Wrapper the response data
-     */
-    public function authToken()
-    {
-        return new Wrapper($this->getFactory()->get('auth/token'));
-    }
-
-    /**
-     * Raw vault call with a path.
-     *
-     * @param  string $method get, put, post, delete
-     * @param  string $url URL path like /v1/sys/init
-     * @param  array $params params like ['body' => json_encode(['foo' => bar])]
-     *
-     * @return array the response data
-     */
-    public function raw($method, $url, $params = [])
-    {
-        return (new Wrapper(null))
-            ->raw($this->getClient(), $method, $url, $params);
+        return str_replace('/', '', ucwords($method, '/'));
     }
 
     /**
@@ -127,13 +78,5 @@ class Vault
     protected function getFactory()
     {
         return new ServiceFactory($this->options);
-    }
-
-    /**
-     * @return Client
-     */
-    protected function getClient()
-    {
-        return new Client($this->options);
     }
 }

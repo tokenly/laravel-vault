@@ -5,112 +5,118 @@ namespace Tokenly\Vault;
 use Exception;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Support\Facades\Log;
-use Jippi\Vault\Client as VaultClient;
 use Jippi\Vault\Exception\ClientException;
 use Jippi\Vault\Exception\ServerException;
+use Jippi\Vault\ServiceFactory;
 
 /**
- * Class VaultWrapper
+ * Class Wrapper.
  */
 class Wrapper
 {
+    /** @var ServiceFactory */
+    protected $serviceDelegate;
 
-    public function __construct($service_delegate)
+    /** @var Response|array */
+    protected $response;
+
+    /** @var Exception */
+    protected $exception;
+
+    /** @var array */
+    protected $errors = [];
+
+    /** @var array */
+    protected $data = [];
+
+    /** @var int */
+    protected $code = null;
+
+    public function __construct($serviceDelegate)
     {
-        $this->service_delegate = $service_delegate;
+        $this->serviceDelegate = $serviceDelegate;
     }
 
     public function __call($method, $args)
     {
         try {
-            if (!$this->service_delegate) {
-                throw new Exception("Undefined service", 1);
-            }
-            $response = call_user_func_array([$this->service_delegate, $method], $args);
-            $exception = null;
-        } catch (Exception $e) {
-            $exception = $e;
-            $response = null;
+            $this->response = call_user_func_array([$this->serviceDelegate, $method], $args);
+        } catch (Exception $exception) {
+            $this->exception = $exception;
         }
 
-        return $this->decodeResponse($response, $exception);
+        return $this->getResponse();
     }
 
-    public function raw(VaultClient $client, $method, $url, $params)
+    protected function isSuccessful()
     {
-        try {
-            $response = $client->{$method}($url, $params);
-            $exception = null;
-        } catch (Exception $e) {
-            $exception = $e;
-            $response = null;
-        }
-
-        return $this->decodeResponse($response, $exception);
+        return count($this->errors) == 0;
     }
 
-    protected function decodeResponse($response, $exception)
+    protected function setResponseFromException()
     {
-        $json_data = null;
-        $http_response_code = null;
-        $success = null;
-        $error = null;
-        $body = null;
+        if (($this->exception instanceof ClientException) ||
+            ($this->exception instanceof ServerException)) {
+            $this->response = $this->exception->response();
+        }
+    }
 
-        if ($exception) {
-            $success = false;
-            $error = $exception->getMessage();
-            if (($exception instanceof ClientException) or ($exception instanceof ServerException)) {
-                $response = $exception->response();
-            }
+    protected function setDataFromResponse()
+    {
+        $this->data = (array)$this->response;
+
+        if ($this->response instanceof Response) {
+            $this->data = json_decode($this->response->getBody()->getContents(), true) ?: [];
+        }
+    }
+
+    protected function setErrors()
+    {
+        if ($this->exception) {
+            $this->errors[] = $this->exception->getMessage();
         }
 
-        if ($response instanceof Response) {
-            $body = (string)$response->getBody();
-            $http_response_code = $response->getStatusCode();
-            if ($body !== '') {
-                // try to decode a JSON object
-                $json_data = json_decode($body, true);
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    if ($success === null) {
-                        $success = true;
-                    }
-
-                    if ($success === false) {
-                        // try replacing the error message
-                        if ($json_data and isset($json_data['errors']) and is_array($json_data['errors'])) {
-                            $error = implode(", ", $json_data['errors']);
-                        }
-                    }
-                } else {
-                    $success = false;
-                    $error = 'Error trying to decode response: ' . json_last_error_msg();
-
-                }
-            } else {
-                // empty body
-                if (substr($http_response_code, 0, 1) == '2') {
-                    $success = true;
-                }
-            }
-        } else {
-            if ($success === null) {
-                $body = $response;
-                $success = true;
-            }
+        if (isset($this->data['errors']) && is_array($this->data['errors'])) {
+            $this->errors = array_merge($this->errors, $this->data['errors']);
         }
 
-        if (!$success) {
-            Log::warning("Vault Error ($http_response_code): " . $error);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->errors[] = 'Error trying to decode response: ' . json_last_error_msg();
         }
+    }
 
-        return [
-            'success' => $success,
-            'code' => $http_response_code,
-            'data' => $json_data,
-            'error' => $error,
-            'raw' => $body,
+    protected function setCode()
+    {
+        if ($this->response instanceof Response) {
+            $this->code = $this->response->getStatusCode();
+        }
+    }
+
+    protected function logErrors()
+    {
+        Log::warning("Vault Error ($this->code): " . implode(", ", $this->errors));
+    }
+
+    protected function getResponse()
+    {
+        $this->setResponseFromException();
+        $this->setDataFromResponse();
+        $this->setErrors();
+        $this->setCode();
+
+        $data = [
+            'success' => $this->isSuccessful(),
+            'code' => $this->code,
         ];
-    }
 
+        if ($this->isSuccessful()) {
+            $data['data'] = $this->data;
+        } else {
+            $data['errors'] = $this->errors;
+        }
+
+        $this->logErrors();
+
+        return $data;
+    }
 }
