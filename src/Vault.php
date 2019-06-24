@@ -2,40 +2,48 @@
 
 namespace Tokenly\Vault;
 
-use Jippi\Vault\Client as VaultClient;
+use Jippi\Vault\Client;
 use Jippi\Vault\ServiceFactory;
-use Tokenly\Vault\VaultWrapper;
 
 /**
- * Class Vault
+ * Class Vault.
  */
 class Vault
 {
-
-    protected $vault_service_factory = null;
-    protected $options = null;
+    /** @var array */
+    protected $options;
 
     /**
-     * Vault constructor
-     * @param string $address      Vault service address like https://127.0.0.1:8200
-     * @param string $ca_cert_path Path to a certificate authority certificate
+     * Vault constructor.
+     *
+     * @param string $address Vault service address like https://127.0.0.1:8200
+     * @param string $certificate Path to a certificate authority certificate
      */
-    public function __construct($address, $ca_cert_path = null)
+    public function __construct($address, $certificate = null)
     {
         $this->options = [
             'base_uri' => $address,
         ];
 
-        if ($ca_cert_path !== null) {
-            $this->options['verify'] = $ca_cert_path;
+        if ($certificate) {
+            $this->options['verify'] = $certificate;
         }
     }
 
+    /**
+     * @param string $token
+     *
+     * @return \Tokenly\Vault\Vault
+     */
     public function setToken($token)
     {
         $this->options = array_merge_recursive(
             $this->options,
-            ['headers' => ['X-Vault-Token' => $token]]
+            [
+                'headers' => [
+                    'X-Vault-Token' => $token
+                ]
+            ]
         );
 
         return $this;
@@ -52,11 +60,12 @@ class Vault
      *   "raw" => "{"initialized":true}\n",
      *   "error" => null,
      * ]
-     * @return array          the response data
+     *
+     * @return \Tokenly\Vault\VaultWrapper the response data
      */
     public function sys()
     {
-        return new VaultWrapper($this->getFactory('sys'));
+        return new VaultWrapper($this->getFactory()->get('sys'));
     }
 
     /**
@@ -70,11 +79,12 @@ class Vault
      *   "raw" => "{"initialized":true}\n",
      *   "error" => null,
      * ]
-     * @return array          the response data
+     *
+     * @return \Tokenly\Vault\VaultWrapper the response data
      */
     public function data()
     {
-        return new VaultWrapper($this->getFactory('data'));
+        return new VaultWrapper($this->getFactory()->get('data'));
     }
 
     /**
@@ -88,33 +98,42 @@ class Vault
      *   "raw" => "{"initialized":true}\n",
      *   "error" => null,
      * ]
-     * @return array          the response data
+     *
+     * @return \Tokenly\Vault\VaultWrapper the response data
      */
     public function authToken()
     {
-        return new VaultWrapper($this->getFactory('auth/token'));
+        return new VaultWrapper($this->getFactory()->get('auth/token'));
     }
 
     /**
-     * Raw vault call with a path
+     * Raw vault call with a path.
+     *
      * @param  string $method get, put, post, delete
-     * @param  string $url    URL path like /v1/sys/init
-     * @param  array  $params params like ['body' => json_encode(['foo' => bar])]
-     * @return array          the response data
+     * @param  string $url URL path like /v1/sys/init
+     * @param  array $params params like ['body' => json_encode(['foo' => bar])]
+     *
+     * @return array the response data
      */
     public function raw($method, $url, $params = [])
     {
-        $client = new VaultClient($this->options);
-        $wrapper = new VaultWrapper(null);
-        return $wrapper->raw($client, $method, $url, $params);
+        return (new VaultWrapper(null))
+            ->raw($this->getClient(), $method, $url, $params);
     }
 
-    // ------------------------------------------------------------------------
-
-    protected function getFactory($path)
+    /**
+     * @return ServiceFactory
+     */
+    protected function getFactory()
     {
-        $sf = new ServiceFactory($this->options);
-        return $sf->get($path);
+        return new ServiceFactory($this->options);
     }
 
+    /**
+     * @return Client
+     */
+    protected function getClient()
+    {
+        return new Client($this->options);
+    }
 }
