@@ -23,7 +23,9 @@ class Wrapper
     public function __call($method, $args)
     {
         try {
-            if (!$this->service_delegate) {throw new Exception("Undefined service", 1);}
+            if (!$this->service_delegate) {
+                throw new Exception("Undefined service", 1);
+            }
             $response = call_user_func_array([$this->service_delegate, $method], $args);
             $exception = null;
         } catch (Exception $e) {
@@ -64,7 +66,7 @@ class Wrapper
         }
 
         if ($response instanceof Response) {
-            $body = (string) $response->getBody();
+            $body = (string)$response->getBody();
             $http_response_code = $response->getStatusCode();
             if ($body !== '') {
                 // try to decode a JSON object
@@ -91,9 +93,11 @@ class Wrapper
                     $success = true;
                 }
             }
-        } else if ($success === null) {
-            $body = $response;
-            $success = true;
+        } else {
+            if ($success === null) {
+                $body = $response;
+                $success = true;
+            }
         }
 
         if (!$success) {
