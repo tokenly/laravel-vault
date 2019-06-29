@@ -8,7 +8,7 @@ namespace Tokenly\Vault;
  * @method \Jippi\Vault\Services\Sys sys()
  * @method \Jippi\Vault\Services\Data data()
  * @method \Jippi\Vault\Services\Auth\Token authToken()
- * @method \Tokenly\Vault\Services\Raw raw(string $method, string $url, array $params = [])
+ * @method \Tokenly\Vault\Services\Raw raw()
  */
 class Vault
 {
@@ -52,10 +52,10 @@ class Vault
     }
 
     /**
-     * @param $method
-     * @param $args
+     * @param string $method
+     * @param array $args
      *
-     * @return Wrapper
+     * @return \Tokenly\Vault\Wrapper
      */
     public function __call($method, $args)
     {
@@ -73,7 +73,7 @@ class Vault
     }
 
     /**
-     * @return ServiceFactory
+     * @return \Tokenly\Vault\ServiceFactory
      */
     protected function getFactory()
     {

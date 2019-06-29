@@ -4,8 +4,14 @@ namespace Tokenly\Vault;
 
 use Jippi\Vault\ServiceFactory as BaseServiceFactory;
 
+/**
+ * Class ServiceFactory.
+ */
 class ServiceFactory extends BaseServiceFactory
 {
+    /**
+     * @var array 
+     */
     protected static $services = [
         'sys' => 'Jippi\Vault\Services\Sys',
         'data' => 'Jippi\Vault\Services\Data',
@@ -15,12 +21,14 @@ class ServiceFactory extends BaseServiceFactory
     ];
 
     /**
-     * @param $service
+     * @param string $service
+     * 
      * @return mixed
      */
     public function get($service)
     {
         if (!array_key_exists($service, self::$services)) {
+
             $servicesString = implode('", "', array_keys(self::$services));
 
             throw new \InvalidArgumentException(

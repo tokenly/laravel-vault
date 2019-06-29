@@ -2,8 +2,10 @@
 
 namespace Tokenly\Vault\Services;
 
+use Error;
+use Illuminate\Http\Response;
 use Jippi\Vault\Client;
-use Psr\Http\Message\ResponseInterface;
+use Jippi\Vault\Exception\ClientException;
 
 /**
  * Class Raw.
@@ -20,7 +22,7 @@ class Raw
     /**
      * Create a new Data service with an optional Client
      *
-     * @param Client|null $client
+     * @param \Jippi\Vault\Client|null $client
      */
     public function __construct(Client $client = null)
     {
@@ -31,11 +33,15 @@ class Raw
      * @param string $method
      * @param string $url
      * @param array $params
-     *
-     * @return ResponseInterface
+     * 
+     * @return \Psr\Http\Message\ResponseInterface
      */
-    public function raw($method, $url, array $params = [])
+    public function invoke($method, $url, array $params = [])
     {
-        return $this->client->{$method}($url, $params);
+        try {
+            return $this->client->{$method}($url, $params);
+        } catch (Error $exception) {
+            throw new ClientException($exception->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

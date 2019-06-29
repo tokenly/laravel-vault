@@ -4,23 +4,21 @@ namespace Tokenly\Vault;
 
 use Error;
 use Exception;
-use GuzzleHttp\Psr7\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
-use Jippi\Vault\ServiceFactory;
 
 /**
  * Class Wrapper.
  */
 class Wrapper
 {
-    /** @var ServiceFactory */
+    /** @var \Tokenly\Vault\ServiceFactory */
     protected $serviceDelegate;
 
-    /** @var Response|array */
+    /** @var \GuzzleHttp\Psr7\Response|array */
     protected $response;
 
-    /** @var Exception */
+    /** @var Exception|\Jippi\Vault\Exception\ClientException */
     protected $exception;
 
     /** @var array */
@@ -35,7 +33,7 @@ class Wrapper
     /**
      * Wrapper constructor.
      *
-     * @param $serviceDelegate
+     * @param \Tokenly\Vault\ServiceFactory $serviceDelegate
      */
     public function __construct($serviceDelegate)
     {
@@ -68,7 +66,7 @@ class Wrapper
     }
 
     /**
-     * Setting response from exception if method response is avalibale
+     * Setting response from exception if method response is available
      */
     protected function setResponseFromException()
     {
@@ -80,7 +78,7 @@ class Wrapper
     }
 
     /**
-     * Setting data and code from response if methods are avalibale
+     * Setting data and code from response if methods are available
      */
     protected function setPropertiesFromResponse()
     {
@@ -93,7 +91,7 @@ class Wrapper
     }
 
     /**
-     * Trying to find errors in response, exeption or bad json
+     * Trying to find errors in response, exception or bad json
      */
     protected function setErrors()
     {
