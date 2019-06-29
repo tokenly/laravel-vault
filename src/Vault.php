@@ -8,7 +8,7 @@ namespace Tokenly\Vault;
  * @method \Jippi\Vault\Services\Sys sys()
  * @method \Jippi\Vault\Services\Data data()
  * @method \Jippi\Vault\Services\Auth\Token authToken()
- * @method \Tokenly\Vault\Services\Raw raw()
+ * @method \Tokenly\Vault\Services\Raw raw(string $method, string $url, array $params = [])
  */
 class Vault
 {
@@ -59,17 +59,17 @@ class Vault
      */
     public function __call($method, $args)
     {
-        return new Wrapper($this->getFactory()->get($this->camelMethodName($method)));
+        return new Wrapper($this->getFactory()->get($this->camel2dashed($method)));
     }
 
     /**
-     * @param $method
+     * @param string $methodName
      *
      * @return string
      */
-    protected function camelMethodName($method)
+    protected function camel2dashed($methodName)
     {
-        return str_replace('/', '', ucwords($method, '/'));
+        return strtolower(preg_replace('/([a-zA-Z])(?=[A-Z])/', '$1/', $methodName));
     }
 
     /**

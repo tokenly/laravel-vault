@@ -3,7 +3,11 @@
 namespace Tokenly\Vault\Services;
 
 use Jippi\Vault\Client;
+use Psr\Http\Message\ResponseInterface;
 
+/**
+ * Class Raw.
+ */
 class Raw
 {
     /**
@@ -23,7 +27,14 @@ class Raw
         $this->client = $client ?: new Client();
     }
 
-    public function raw($method, $url, $params)
+    /**
+     * @param string $method
+     * @param string $url
+     * @param array $params
+     *
+     * @return ResponseInterface
+     */
+    public function raw($method, $url, array $params = [])
     {
         return $this->client->{$method}($url, $params);
     }

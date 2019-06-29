@@ -17,9 +17,10 @@ use Illuminate\Support\Facades\Facade;
  * Class Vault.
  *
  * @method static \Tokenly\Vault\Vault setToken(string $token)
- * @method static \Tokenly\Vault\Wrapper sys()
- * @method static \Tokenly\Vault\Wrapper data()
- * @method static array raw(string $method, string $url, array $params = [])
+ * @method static \Jippi\Vault\Services\Sys sys()
+ * @method static \Jippi\Vault\Services\Data data()
+ * @method static \Jippi\Vault\Services\Auth\Token authToken()
+ * @method static \Tokenly\Vault\Services\Raw raw()
  */
 class Vault extends Facade
 {

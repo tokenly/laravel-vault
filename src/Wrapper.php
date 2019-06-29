@@ -2,11 +2,11 @@
 
 namespace Tokenly\Vault;
 
+use Error;
 use Exception;
 use GuzzleHttp\Psr7\Response;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
-use Jippi\Vault\Exception\ClientException;
-use Jippi\Vault\Exception\ServerException;
 use Jippi\Vault\ServiceFactory;
 
 /**
@@ -30,14 +30,25 @@ class Wrapper
     protected $data = [];
 
     /** @var int */
-    protected $code = null;
+    protected $code = 500;
 
+    /**
+     * Wrapper constructor.
+     *
+     * @param $serviceDelegate
+     */
     public function __construct($serviceDelegate)
     {
         $this->serviceDelegate = $serviceDelegate;
     }
 
-    public function __call($method, $args)
+    /**
+     * @param string $method
+     * @param array $args
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function __call($method, array $args)
     {
         try {
             $this->response = call_user_func_array([$this->serviceDelegate, $method], $args);
@@ -48,61 +59,69 @@ class Wrapper
         return $this->getResponse();
     }
 
+    /**
+     * @return bool
+     */
     protected function isSuccessful()
     {
         return count($this->errors) == 0;
     }
 
+    /**
+     * Setting response from exception if method response is avalibale
+     */
     protected function setResponseFromException()
     {
-        if (($this->exception instanceof ClientException) ||
-            ($this->exception instanceof ServerException)) {
+        try {
             $this->response = $this->exception->response();
+        } catch (Error $exception) {
+            //
         }
     }
 
-    protected function setDataFromResponse()
+    /**
+     * Setting data and code from response if methods are avalibale
+     */
+    protected function setPropertiesFromResponse()
     {
-        $this->data = (array)$this->response;
-
-        if ($this->response instanceof Response) {
-            $this->data = json_decode($this->response->getBody()->getContents(), true) ?: [];
+        try {
+            $this->data = json_decode($this->response->getBody(), true);
+            $this->code = $this->response->getStatusCode();
+        } catch (Error $exception) {
+            $this->data = (array)$this->response;
         }
     }
 
+    /**
+     * Trying to find errors in response, exeption or bad json
+     */
     protected function setErrors()
     {
-        if ($this->exception) {
-            $this->errors[] = $this->exception->getMessage();
-        }
-
-        if (isset($this->data['errors']) && is_array($this->data['errors'])) {
-            $this->errors = array_merge($this->errors, $this->data['errors']);
-        }
-
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->errors[] = 'Error trying to decode response: ' . json_last_error_msg();
+            $this->errors = ['Error trying to decode response: ' . json_last_error_msg()];
+        } elseif (!empty($this->data['errors'])) {
+            $this->errors = $this->data['errors'];
+        } elseif ($this->exception) {
+            $this->errors = [$this->exception->getMessage()];
         }
     }
 
-    protected function setCode()
-    {
-        if ($this->response instanceof Response) {
-            $this->code = $this->response->getStatusCode();
-        }
-    }
-
+    /**
+     *
+     */
     protected function logErrors()
     {
         Log::warning("Vault Error ($this->code): " . implode(", ", $this->errors));
     }
 
+    /**
+     * @return \Illuminate\Http\JsonResponse
+     */
     protected function getResponse()
     {
         $this->setResponseFromException();
-        $this->setDataFromResponse();
+        $this->setPropertiesFromResponse();
         $this->setErrors();
-        $this->setCode();
 
         $data = [
             'success' => $this->isSuccessful(),
@@ -117,6 +136,6 @@ class Wrapper
 
         $this->logErrors();
 
-        return $data;
+        return new JsonResponse($data, $this->code);
     }
 }
