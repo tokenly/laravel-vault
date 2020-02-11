@@ -29,6 +29,9 @@ class Vault
         if ($ca_cert_path !== null) {
             $this->options['verify'] = $ca_cert_path;
         }
+        else{
+            $this->options['verify'] = false;
+        }
     }
 
     public function setToken($token)
